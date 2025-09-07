@@ -1,4 +1,7 @@
 
+using Microsoft.EntityFrameworkCore;
+using StackOverflowSimplified.Entites;
+
 namespace StackOverflowSimplified
 {
     public class Program
@@ -14,6 +17,8 @@ namespace StackOverflowSimplified
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddDbContext<StackOverflowContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("StackOverflowConnectionString")));
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -27,25 +32,15 @@ namespace StackOverflowSimplified
 
             app.UseAuthorization();
 
-            var summaries = new[]
-            {
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            };
+            var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetService<StackOverflowContext>();
+            var pendingMigrations = dbContext.Database.GetPendingMigrations();
 
-            app.MapGet("/weatherforecast", (HttpContext httpContext) =>
+            if (pendingMigrations.Any())
             {
-                var forecast = Enumerable.Range(1, 5).Select(index =>
-                    new WeatherForecast
-                    {
-                        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                        TemperatureC = Random.Shared.Next(-20, 55),
-                        Summary = summaries[Random.Shared.Next(summaries.Length)]
-                    })
-                    .ToArray();
-                return forecast;
-            })
-            .WithName("GetWeatherForecast")
-            .WithOpenApi();
+                dbContext.Database.Migrate();
+            }
+
 
             app.Run();
         }
