@@ -9,5 +9,10 @@
         public DateTime CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
 
+        public User Author { get; set; }
+        public Guid AuthorId { get; set; }
+        public List<Answer> Answers { get; set; } = new List<Answer>();
+        public List<Comment> Comments { get; set; } = new List<Comment>();
+
     }
 }
